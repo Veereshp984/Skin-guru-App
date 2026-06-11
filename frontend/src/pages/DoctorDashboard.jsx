@@ -567,7 +567,7 @@ export function DoctorDashboard() {
                   </p>
                 </div>
               )}
-              )}
+              
             </section>
 
           </div>
