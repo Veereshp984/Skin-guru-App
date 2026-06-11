@@ -87,14 +87,24 @@ export function TopNav({ navItems, imageFile, fileSizeLabel, onOpenFilePicker })
               Scan
             </Link>
             <Link
-              to="/history"
+              to="/scanner"
               className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                location.pathname === "/history"
+                location.pathname === "/scanner"
                   ? "bg-forest/10 text-forest"
                   : "text-ink/68 hover:bg-white hover:text-ink"
               }`}
             >
-              History
+              Live Scan
+            </Link>
+            <Link
+              to="/reports"
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                location.pathname === "/reports" || location.pathname === "/history"
+                  ? "bg-forest/10 text-forest"
+                  : "text-ink/68 hover:bg-white hover:text-ink"
+              }`}
+            >
+              Reports
             </Link>
             {ROLE_DASHBOARD[user.role] && (
               <Link
@@ -190,11 +200,18 @@ export function TopNav({ navItems, imageFile, fileSizeLabel, onOpenFilePicker })
                       🔬 <span>Skin Scan</span>
                     </Link>
                     <Link
-                      to="/history"
+                      to="/scanner"
                       onClick={() => setMenuOpen(false)}
                       className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-ink hover:bg-sand transition"
                     >
-                      📜 <span>Scan History</span>
+                      📷 <span>Live Scanner</span>
+                    </Link>
+                    <Link
+                      to="/reports"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-ink hover:bg-sand transition"
+                    >
+                      📜 <span>Medical Reports</span>
                     </Link>
                     {ROLE_DASHBOARD[user.role] && (
                       <Link

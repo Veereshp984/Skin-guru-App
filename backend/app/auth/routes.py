@@ -261,3 +261,13 @@ def list_users(
     _: dict[str, Any] = Depends(require_roles(UserRole.ADMIN)),
 ) -> list[UserProfile]:
     return [UserProfile(**public_user(user)) for user in get_database().users.find().sort("created_at", -1)]
+
+
+@router.get("/auth/doctors", response_model=list[UserProfile])
+def list_doctors(
+    current_user: dict[str, Any] = Depends(get_current_user),
+) -> list[UserProfile]:
+    db = get_database()
+    doctors = db.users.find({"role": UserRole.DOCTOR.value}).sort("full_name", 1)
+    return [UserProfile(**public_user(doc)) for doc in doctors]
+

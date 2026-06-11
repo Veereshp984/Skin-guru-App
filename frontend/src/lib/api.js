@@ -21,12 +21,12 @@ export function getAccessToken() {
   return accessToken;
 }
 
-export async function analyzeSkinImage(imageFile) {
+export async function analyzeSkinImage(imageFile, source = "upload") {
   const formData = new FormData();
   formData.append("file", imageFile);
 
   try {
-    const response = await authFetch(`${API_BASE}/api/predict?model=${MODEL_NAME}`, {
+    const response = await authFetch(`${API_BASE}/api/predict?model=${MODEL_NAME}&source=${source}`, {
       method: "POST",
       body: formData,
     });
@@ -171,4 +171,141 @@ async function parseApiResponse(response) {
 
   const text = await response.text();
   return { detail: text || "The server returned an empty response." };
+}
+
+// ── Medical Reports API Helpers ───────────────────────────────────────────────
+
+export async function getReports(filters = {}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.append(key, value);
+    }
+  });
+  const queryString = params.toString();
+  return authRequest(`/api/reports${queryString ? `?${queryString}` : ""}`);
+}
+
+export async function getReport(reportId) {
+  return authRequest(`/api/reports/${reportId}`);
+}
+
+export async function submitDoctorReview(reportId, comments, status = "reviewed") {
+  return authRequest(`/api/reports/${reportId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      review_input: { comments, status }
+    })
+  });
+}
+
+export async function archiveReport(reportId, isArchived = true) {
+  return authRequest(`/api/reports/${reportId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      archive_input: { is_archived: isArchived }
+    })
+  });
+}
+
+export async function deleteReport(reportId) {
+  return authRequest(`/api/reports/${reportId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getReportImageUrl(reportId) {
+  try {
+    const response = await authFetch(`${API_BASE}/api/reports/image/${reportId}`);
+    if (!response.ok) {
+      return null;
+    }
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error("Error loading secure report image:", error);
+    return null;
+  }
+}
+
+
+// ── Doctor Reviews & Consultations API Helpers ─────────────────────────────────
+
+export async function requestReview(reportId, doctorId = null) {
+  return authRequest("/api/reviews/request", {
+    method: "POST",
+    body: JSON.stringify({ report_id: reportId, doctor_id: doctorId }),
+  });
+}
+
+export async function getPatientReviews() {
+  return authRequest("/api/reviews/patient");
+}
+
+export async function getDoctorReviews(status = "", q = "") {
+  const params = new URLSearchParams();
+  if (status) params.append("status", status);
+  if (q) params.append("q", q);
+  const queryString = params.toString();
+  return authRequest(`/api/reviews/doctor${queryString ? `?${queryString}` : ""}`);
+}
+
+export async function getReviewDetails(reviewId) {
+  return authRequest(`/api/reviews/${reviewId}`);
+}
+
+export async function submitDoctorReviewData(reviewId, payload) {
+  return authRequest(`/api/reviews/${reviewId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateReviewRequestStatus(reviewId, status) {
+  return authRequest(`/api/reviews/${reviewId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function getAdminReviews(skip = 0, limit = 20) {
+  return authRequest(`/api/reviews/admin/all?skip=${skip}&limit=${limit}`);
+}
+
+export async function getAdminReviewStats() {
+  return authRequest("/api/reviews/admin/stats");
+}
+
+export async function getDoctorsList() {
+  return authRequest("/api/auth/doctors");
+}
+
+// ── Analytics API Helpers ─────────────────────────────────────────────────────
+
+function buildDateQuery(startDate, endDate) {
+  const params = new URLSearchParams();
+  if (startDate) params.append("start_date", startDate);
+  if (endDate) params.append("end_date", endDate);
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
+
+export async function getAdminAnalytics(startDate, endDate) {
+  return authRequest(`/api/analytics/admin${buildDateQuery(startDate, endDate)}`);
+}
+
+export async function getDoctorAnalytics(startDate, endDate) {
+  return authRequest(`/api/analytics/doctor${buildDateQuery(startDate, endDate)}`);
+}
+
+export async function getPatientAnalytics(startDate, endDate) {
+  return authRequest(`/api/analytics/patient${buildDateQuery(startDate, endDate)}`);
+}
+
+export async function getDiseaseAnalytics(startDate, endDate) {
+  return authRequest(`/api/analytics/diseases${buildDateQuery(startDate, endDate)}`);
+}
+
+export async function getTrendAnalytics(startDate, endDate) {
+  return authRequest(`/api/analytics/trends${buildDateQuery(startDate, endDate)}`);
 }

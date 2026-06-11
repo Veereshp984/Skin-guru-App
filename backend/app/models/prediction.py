@@ -23,5 +23,6 @@ def public_prediction(doc: dict[str, Any]) -> dict[str, Any]:
         "model_name": doc.get("model_name", "ensemble"),
         "processing_time_ms": doc.get("processing_time_ms", 0),
         "image_filename": doc.get("image_filename", ""),
+        "capture_source": doc.get("capture_source", "upload"),
         "created_at": doc.get("created_at"),
     }

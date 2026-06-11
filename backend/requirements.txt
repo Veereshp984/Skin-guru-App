@@ -13,3 +13,4 @@ google-auth==2.36.0
 pydantic[email]==2.10.4
 python-dotenv==1.0.1
 opencv-python-headless==4.11.0.86
+reportlab==4.1.0

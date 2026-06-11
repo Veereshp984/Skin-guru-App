@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Query
 from fastapi.security import OAuth2PasswordBearer
 from pymongo.collection import Collection
 
@@ -12,6 +12,7 @@ from backend.app.config import (
     MAX_UPLOAD_BYTES,
     ALLOWED_CONTENT_TYPES,
     PREDICTIONS_PAGE_SIZE,
+    UPLOADS_DIR,
 )
 from backend.app.db.mongo import get_database, ensure_indexes
 from backend.app.models.prediction import public_prediction
@@ -22,6 +23,7 @@ from backend.app.schemas import (
     PredictionSummary,
 )
 from backend.app.auth.dependencies import get_current_user
+from backend.app.analytics_routes import clear_analytics_cache
 
 # Router setup
 router = APIRouter()
@@ -30,6 +32,7 @@ router = APIRouter()
 async def predict_image(
     file: Annotated[UploadFile, File(...)],
     model: str = "ensemble",
+    source: str = Query(default="upload", pattern="^(upload|webcam)$"),
     current_user: dict = Depends(get_current_user),
 ):
     # Validate content type
@@ -49,6 +52,19 @@ async def predict_image(
     report_id = str(uuid.uuid4())
     timestamp = datetime.utcnow()
 
+    # Save uploaded image to disk securely
+    import os
+    os.makedirs(UPLOADS_DIR, exist_ok=True)
+    image_path = UPLOADS_DIR / f"{report_id}.jpg"
+    try:
+        with open(image_path, "wb") as img_file:
+            img_file.write(content)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save image on the server: {exc}"
+        ) from exc
+
     # Run prediction (includes OpenCV preprocessing and timing)
     prediction = model_service.predict(
         image_bytes=content,
@@ -57,7 +73,7 @@ async def predict_image(
         timestamp=timestamp,
     )
 
-    # Persist result in MongoDB
+    # Persist result in MongoDB predictions collection (used as reports storage)
     db = get_database()
     predictions: Collection = db.predictions
     record = {
@@ -78,10 +94,25 @@ async def predict_image(
         "model_version": prediction.model_version,
         "model_name": prediction.model,
         "processing_time_ms": prediction.processing_time_ms,
-        "image_filename": file.filename,
+        "image_filename": f"{report_id}.jpg",
+        "capture_source": source,
+        "doctor_review_status": "pending",
+        "doctor_review": None,
+        "audit_trail": [
+            {
+                "action": "scan_completed",
+                "user_id": str(current_user["_id"]),
+                "user_email": current_user["email"],
+                "timestamp": timestamp,
+                "details": f"AI scan completed using {model} model via {source}."
+            }
+        ],
+        "is_archived": False,
         "created_at": timestamp,
+        "updated_at": timestamp,
     }
     predictions.insert_one(record)
+    clear_analytics_cache()
 
     return prediction
 

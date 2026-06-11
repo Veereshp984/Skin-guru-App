@@ -44,3 +44,4 @@ MODEL_VERSION = os.getenv("MODEL_VERSION", "1.0.0")
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(10 * 1024 * 1024)))  # 10 MB default
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 PREDICTIONS_PAGE_SIZE = int(os.getenv("PREDICTIONS_PAGE_SIZE", "20"))
+UPLOADS_DIR = ROOT_DIR / "backend" / "uploads"

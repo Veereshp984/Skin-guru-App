@@ -8,7 +8,8 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { PatientDashboard } from "./pages/PatientDashboard";
 import { DoctorDashboard } from "./pages/DoctorDashboard";
 import { AdminDashboard } from "./pages/AdminDashboard";
-import { ScanHistoryPage } from "./pages/ScanHistoryPage";
+import { MedicalReportsPage } from "./pages/MedicalReportsPage";
+import { LiveScannerPage } from "./pages/LiveScannerPage";
 
 function App() {
   return (
@@ -29,6 +30,14 @@ function App() {
             }
           />
           <Route
+            path="/scanner"
+            element={
+              <ProtectedRoute roles={["patient", "doctor", "admin"]}>
+                <LiveScannerPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/profile"
             element={
               <ProtectedRoute roles={["patient", "doctor", "admin"]}>
@@ -37,10 +46,18 @@ function App() {
             }
           />
           <Route
+            path="/reports"
+            element={
+              <ProtectedRoute roles={["patient", "doctor", "admin"]}>
+                <MedicalReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/history"
             element={
               <ProtectedRoute roles={["patient", "doctor", "admin"]}>
-                <ScanHistoryPage />
+                <MedicalReportsPage />
               </ProtectedRoute>
             }
           />

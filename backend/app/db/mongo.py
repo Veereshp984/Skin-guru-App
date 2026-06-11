@@ -38,3 +38,19 @@ def ensure_indexes() -> None:
     predictions.create_index([("user_id", ASCENDING)])
     predictions.create_index([("created_at", DESCENDING)])
     predictions.create_index([("user_id", ASCENDING), ("created_at", DESCENDING)])
+
+    # Reviews collection
+    reviews = database.reviews
+    reviews.create_index([("review_id", ASCENDING)], unique=True)
+    reviews.create_index([("report_id", ASCENDING)])
+    reviews.create_index([("patient_id", ASCENDING)])
+    reviews.create_index([("doctor_id", ASCENDING)])
+    reviews.create_index([("status", ASCENDING)])
+    reviews.create_index([("created_at", DESCENDING)])
+
+    # API logs collection
+    api_logs = database.api_logs
+    api_logs.create_index([("timestamp", DESCENDING)])
+    api_logs.create_index([("path", ASCENDING)])
+    api_logs.create_index([("user_id", ASCENDING)])
+
