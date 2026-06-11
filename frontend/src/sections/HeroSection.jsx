@@ -17,6 +17,13 @@ export function HeroSection({
   onDrop,
   onPredict,
   fileSizeLabel,
+  isCameraActive,
+  cameraStream,
+  cameraError,
+  onStartCamera,
+  onCloseCamera,
+  onCapturePhoto,
+  onClearSelectedFile,
 }) {
   return (
     <section
@@ -97,6 +104,13 @@ export function HeroSection({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onPredict={onPredict}
+        isCameraActive={isCameraActive}
+        cameraStream={cameraStream}
+        cameraError={cameraError}
+        onStartCamera={onStartCamera}
+        onCloseCamera={onCloseCamera}
+        onCapturePhoto={onCapturePhoto}
+        onClearSelectedFile={onClearSelectedFile}
       />
     </section>
   );

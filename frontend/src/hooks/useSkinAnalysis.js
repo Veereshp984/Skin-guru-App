@@ -12,6 +12,11 @@ export function useSkinAnalysis() {
   const [predictMessage, setPredictMessage] = useState("Upload an image to begin.");
   const [prediction, setPrediction] = useState(null);
 
+  // Camera states
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState(null);
+  const [cameraError, setCameraError] = useState("");
+
   useEffect(() => {
     if (!imageFile) {
       setPreviewUrl("");
@@ -24,6 +29,15 @@ export function useSkinAnalysis() {
     return () => URL.revokeObjectURL(nextPreviewUrl);
   }, [imageFile]);
 
+  // Clean up camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
   function applySelectedFile(file) {
     setImageFile(file);
     setPrediction(null);
@@ -35,6 +49,7 @@ export function useSkinAnalysis() {
   }
 
   function openFilePicker() {
+    closeCamera();
     fileInputRef.current?.click();
   }
 
@@ -67,6 +82,7 @@ export function useSkinAnalysis() {
   function handleDrop(event) {
     event.preventDefault();
     setIsDragging(false);
+    closeCamera();
 
     const [file] = Array.from(event.dataTransfer.files || []).filter((item) =>
       item.type.startsWith("image/"),
@@ -78,6 +94,61 @@ export function useSkinAnalysis() {
     }
 
     applySelectedFile(file);
+  }
+
+  async function startCamera() {
+    applySelectedFile(null);
+    setCameraError("");
+    setIsCameraActive(true);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      setCameraStream(stream);
+    } catch (err) {
+      console.error("Camera access error:", err);
+      setCameraError("Could not access camera. Please check permissions.");
+      setIsCameraActive(false);
+    }
+  }
+
+  function closeCamera() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    setIsCameraActive(false);
+  }
+
+  function capturePhoto(videoElement) {
+    if (!videoElement) {
+      setCameraError("Video feed is not ready.");
+      return;
+    }
+
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoElement.videoWidth || 640;
+      canvas.height = videoElement.videoHeight || 480;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          setCameraError("Failed to capture photo.");
+          return;
+        }
+        const file = new File([blob], "camera_capture.jpg", { type: "image/jpeg" });
+        applySelectedFile(file);
+        closeCamera();
+      }, "image/jpeg", 0.95);
+    } catch (err) {
+      console.error("Error capturing photo:", err);
+      setCameraError("Error capturing photo from video stream.");
+    }
   }
 
   async function handlePredict() {
@@ -131,6 +202,9 @@ export function useSkinAnalysis() {
     prediction,
     topPrediction: prediction?.top_prediction ?? null,
     modelName: MODEL_NAME,
+    isCameraActive,
+    cameraStream,
+    cameraError,
     applySelectedFile,
     openFilePicker,
     handleFileChange,
@@ -140,5 +214,8 @@ export function useSkinAnalysis() {
     handleDrop,
     handlePredict,
     handleDownloadReport,
+    startCamera,
+    closeCamera,
+    capturePhoto,
   };
 }

@@ -36,6 +36,13 @@ export function HomePage() {
     handleDrop,
     handlePredict,
     handleDownloadReport,
+    isCameraActive,
+    cameraStream,
+    cameraError,
+    startCamera,
+    closeCamera,
+    capturePhoto,
+    applySelectedFile,
   } = useSkinAnalysis();
 
   useEffect(() => {
@@ -92,6 +99,13 @@ export function HomePage() {
               onDrop={handleDrop}
               onPredict={handlePredict}
               fileSizeLabel={fileSizeLabel}
+              isCameraActive={isCameraActive}
+              cameraStream={cameraStream}
+              cameraError={cameraError}
+              onStartCamera={startCamera}
+              onCloseCamera={closeCamera}
+              onCapturePhoto={capturePhoto}
+              onClearSelectedFile={() => applySelectedFile(null)}
             />
 
             <WhyItMattersSection points={whyItMattersPoints} />
