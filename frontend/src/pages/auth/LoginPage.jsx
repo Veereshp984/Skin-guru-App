@@ -31,9 +31,9 @@ export function LoginPage() {
 
   return (
     <AuthShell
-      eyebrow="Secure sign in"
-      title="Welcome back to your SkinGuru workspace."
-      subtitle="Access your screening flow, profile, and role-specific healthcare tools with short-lived JWT credentials."
+      eyebrow="SkinGuru Portal"
+      title="Welcome to SkinGuru."
+      subtitle="Access personalized AI skin screening, manage your skin profile, and track your dermatological health securely."
     >
       <form className="space-y-5" onSubmit={handleSubmit}>
         <div>

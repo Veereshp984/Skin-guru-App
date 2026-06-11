@@ -15,9 +15,9 @@ export function AuthShell({ eyebrow, title, subtitle, children }) {
               <p className="mt-4 max-w-lg text-base leading-7 text-ink/68">{subtitle}</p>
             </div>
             <div className="mt-10 grid gap-3 text-sm text-ink/70 sm:grid-cols-3">
-              <span className="rounded-lg bg-foam px-4 py-3">JWT access tokens</span>
-              <span className="rounded-lg bg-foam px-4 py-3">HttpOnly refresh cookie</span>
-              <span className="rounded-lg bg-foam px-4 py-3">Role-based access</span>
+              <span className="rounded-lg bg-foam px-4 py-3">AI Skin Screening</span>
+              <span className="rounded-lg bg-foam px-4 py-3">Personalized Care</span>
+              <span className="rounded-lg bg-foam px-4 py-3">Secure Records</span>
             </div>
           </section>
           <section className="rounded-lg border border-white/70 bg-paper p-5 shadow-soft sm:p-8">
