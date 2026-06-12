@@ -1,4 +1,5 @@
-export const MODEL_NAME = "ensemble";
+// export const MODEL_NAME = "ensemble";
+export const MODEL_NAME = "cnn";
 export const API_BASE = getApiBase();
 const ACCESS_TOKEN_KEY = "skinGuruAccessToken";
 
