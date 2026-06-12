@@ -97,12 +97,25 @@ async def predict_image(
         ) from exc
 
     # Run prediction (includes OpenCV preprocessing and timing)
-    prediction = model_service.predict(
-        image_bytes=content,
-        model_name=model,
-        report_id=report_id,
-        timestamp=timestamp,
-    )
+    # prediction = model_service.predict(
+    #     image_bytes=content,
+    #     model_name=model,
+    #     report_id=report_id,
+    #     timestamp=timestamp,
+    # )
+    try:
+        prediction = model_service.predict(
+            image_bytes=content,
+            model_name=model,
+            report_id=report_id,
+            timestamp=timestamp,
+        )
+    except Exception as exc:
+        print("PREDICTION ERROR:", str(exc))
+        raise HTTPException(
+        status_code=500,
+        detail=str(exc)
+        )
 
     # Persist result in MongoDB predictions collection (used as reports storage)
     db = get_database()
