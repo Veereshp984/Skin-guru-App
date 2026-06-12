@@ -42,12 +42,43 @@ async def predict_image(
             detail="Unsupported file type. Allowed types: jpeg, jpg, png, webp.",
         )
     # Read file content (FastAPI stores in memory unless large)
-    content = await file.read()
-    if len(content) > MAX_UPLOAD_BYTES:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File too large. Max size is {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.",
-        )
+    # content = await file.read()
+    # if len(content) > MAX_UPLOAD_BYTES:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_400_BAD_REQUEST,
+    #         detail=f"File too large. Max size is {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.",
+    #     )
+    # Read file content
+        content = await file.read()
+
+        if len(content) > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File too large. Max size is {MAX_UPLOAD_BYTES // (1024 * 1024)} MB.",
+            )
+
+        # Compress image before prediction
+        from PIL import Image
+        from io import BytesIO
+
+        try:
+            img = Image.open(BytesIO(content))
+
+            max_size = 1024
+            img.thumbnail((max_size, max_size))
+
+            compressed = BytesIO()
+            img.convert("RGB").save(
+                compressed,
+                format="JPEG",
+                quality=70,
+                optimize=True,
+            )
+
+            content = compressed.getvalue()
+
+        except Exception:
+            pass
 
     report_id = str(uuid.uuid4())
     timestamp = datetime.utcnow()

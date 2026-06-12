@@ -98,14 +98,18 @@ class ModelService:
 
         ann_input, cnn_input = self.preprocess_upload(image_bytes)
 
+        # if model_name == "ann":
+        #     probabilities = self._load_ann().predict(ann_input, verbose=0)[0]
+        # elif model_name == "cnn":
+        #     probabilities = self._load_cnn().predict(cnn_input, verbose=0)[0]
+        # else:  # ensemble
+        #     ann_probs = self._load_ann().predict(ann_input, verbose=0)[0]
+        #     cnn_probs = self._load_cnn().predict(cnn_input, verbose=0)[0]
+        #     probabilities = (ann_probs + cnn_probs) / 2.0
         if model_name == "ann":
-            probabilities = self._load_ann().predict(ann_input, verbose=0)[0]
-        elif model_name == "cnn":
+             probabilities = self._load_ann().predict(ann_input, verbose=0)[0]
+        else:
             probabilities = self._load_cnn().predict(cnn_input, verbose=0)[0]
-        else:  # ensemble
-            ann_probs = self._load_ann().predict(ann_input, verbose=0)[0]
-            cnn_probs = self._load_cnn().predict(cnn_input, verbose=0)[0]
-            probabilities = (ann_probs + cnn_probs) / 2.0
 
         processing_time_ms = (time.perf_counter() - t_start) * 1000
 
