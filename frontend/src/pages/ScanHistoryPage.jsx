@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getPredictionHistory, getPrediction } from "../lib/api";
-import { generateAnalysisReport } from "../lib/report";
+import { getPredictionHistory, getPrediction, getAccessToken, API_BASE } from "../lib/api";
 import { formatProbability } from "../lib/format";
 import { TopNav } from "../components/layout/TopNav";
 import { navItems } from "../constants/content";
@@ -65,40 +64,33 @@ export function ScanHistoryPage() {
 
   async function handleDownloadPDF(e, report) {
     e.stopPropagation();
-    setDownloadingId(report.report_id);
+    const reportId = report.report_id;
+    const downloadUrl = `${API_BASE}/api/reports/download/${reportId}?token=${getAccessToken()}`;
+    const isCapacitor = !!window.Capacitor;
+    if (isCapacitor) {
+      window.open(downloadUrl, "_system");
+      return;
+    }
+
+    setDownloadingId(reportId);
     try {
-      let fullReport = detailedReport;
-      if (!fullReport || fullReport.report_id !== report.report_id) {
-        fullReport = await getPrediction(report.report_id);
-      }
-
-      // Adapt stored mongo data format to expected PDF builder format
-      const pdfData = {
-        model: fullReport.model_name,
-        report_id: fullReport.report_id,
-        top_prediction: {
-          code: fullReport.predicted_code,
-          name: fullReport.predicted_disease,
-          probability: fullReport.confidence,
-          description: fullReport.top_predictions?.[0]?.description || "Skin lesion match.",
+      const response = await fetch(`${API_BASE}/api/reports/download/${reportId}`, {
+        headers: {
+          Authorization: `Bearer ${getAccessToken()}`,
         },
-        predictions: fullReport.top_predictions.map((p, idx) => ({
-          index: idx,
-          code: p.code,
-          name: p.name,
-          probability: p.probability,
-          description: p.description,
-        })),
-        model_version: fullReport.model_version || "1.0.0",
-        processing_time_ms: fullReport.processing_time_ms || 0,
-        timestamp: fullReport.created_at,
-      };
-
-      await generateAnalysisReport({
-        prediction: pdfData,
-        imageFile: null, // Image not persisted on server to save storage
-        modelName: pdfData.model,
       });
+      if (!response.ok) {
+        throw new Error("Failed to download PDF report from server.");
+      }
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Medical_Report_${report?.predicted_disease.replace(/\s+/g, "_") || reportId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error(err);
       alert("Error generating PDF report.");

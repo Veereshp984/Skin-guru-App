@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { analyzeSkinImage, MODEL_NAME } from "../lib/api";
-import { generateAnalysisReport } from "../lib/report";
+import { analyzeSkinImage, MODEL_NAME, getAccessToken, API_BASE } from "../lib/api";
 
 export function useSkinAnalysis() {
   const fileInputRef = useRef(null);
@@ -176,14 +175,34 @@ export function useSkinAnalysis() {
       return;
     }
 
+    const reportId = prediction.report_id;
+    const downloadUrl = `${API_BASE}/api/reports/download/${reportId}?token=${getAccessToken()}`;
+    const isCapacitor = !!window.Capacitor;
+    if (isCapacitor) {
+      window.open(downloadUrl, "_system");
+      return;
+    }
+
     setIsDownloadingReport(true);
 
     try {
-      await generateAnalysisReport({
-        prediction,
-        imageFile,
-        modelName: MODEL_NAME,
+      const response = await fetch(`${API_BASE}/api/reports/download/${reportId}`, {
+        headers: {
+          Authorization: `Bearer ${getAccessToken()}`,
+        },
       });
+      if (!response.ok) {
+        throw new Error("Failed to download PDF report from server.");
+      }
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Medical_Report_${prediction.top_prediction.name.replace(/\s+/g, "_") || reportId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
     } catch (error) {
       setPredictMessage("The PDF report could not be generated right now.");
     } finally {

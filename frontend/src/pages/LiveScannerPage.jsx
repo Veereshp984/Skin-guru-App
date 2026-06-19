@@ -183,9 +183,16 @@ export function LiveScannerPage() {
 
   async function handleDownloadPDF() {
     if (!prediction) return;
+    const reportId = prediction.report_id;
+    const downloadUrl = `${API_BASE}/api/reports/download/${reportId}?token=${getAccessToken()}`;
+    const isCapacitor = !!window.Capacitor;
+    if (isCapacitor) {
+      window.open(downloadUrl, "_system");
+      return;
+    }
+
     setDownloadingPdf(true);
     try {
-      const reportId = prediction.report_id;
       const response = await fetch(`${API_BASE}/api/reports/download/${reportId}`, {
         headers: {
           Authorization: `Bearer ${getAccessToken()}`,

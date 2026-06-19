@@ -158,6 +158,12 @@ export function ReportDetailsModal({ reportId, onClose, onUpdate }) {
 
   // Handle protected download click by fetching manually to preserve token header
   async function handleDownloadPDF() {
+    const isCapacitor = !!window.Capacitor;
+    if (isCapacitor) {
+      window.open(downloadUrl, "_system");
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE}/api/reports/download/${reportId}`, {
         headers: {
