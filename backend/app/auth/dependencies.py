@@ -29,7 +29,7 @@ def get_current_user(
             detail="Authentication required.",
         )
 
-    payload = decode_token(credentials.credentials, expected_type="access")
+    payload = decode_token(token_str, expected_type="access")
     try:
         user_object_id = object_id(payload["sub"])
     except (KeyError, ValueError) as exc:
